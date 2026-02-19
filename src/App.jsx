@@ -7,20 +7,67 @@ import SettingsPage from "./pages/SettingsPage";
 import Dashboard from "./pages/DashboardPage";
 import ReportsPage from "./pages/ReportsPage";
 import AddOperationPage from "./pages/AddOperationPage";
+import { AuthProvider, AuthContext } from "./context/AuthContext";
+import { useContext } from "react";
+
+function ProtectedRoute({ children, requiredRole }) {
+  const { user, loading } = useContext(AuthContext);
+  if (loading) return null; // or a loader
+  if (!user) return <Navigate to="/login" replace />;
+  if (requiredRole && user['role'] !== requiredRole) return <Navigate to="/" replace />;
+  return children;
+}
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/operations" element={<OperationsPage />} />
-        <Route path="/add-operation" element={<AddOperationPage />} />
-        <Route path="/add-category" element={<AddCategoryPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/report" element={<ReportsPage />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/operations"
+            element={
+              <ProtectedRoute>
+                <OperationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/add-operation"
+            element={
+              <ProtectedRoute>
+                <AddOperationPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/add-category"
+            element={
+              <ProtectedRoute>
+                <AddCategoryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/report"
+            element={
+              <ProtectedRoute>
+                <ReportsPage />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
