@@ -11,11 +11,15 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://127.0.0.1:8000/auth/login", {
-        email,
-        password,
+      // OAuth2PasswordRequestForm ожидает form-data с полями username и password
+      const formData = new URLSearchParams();
+      formData.append("username", email);
+      formData.append("password", password);
+
+      const response = await axios.post("http://127.0.0.1:8000/auth/login", formData, {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
       });
-      localStorage.setItem("userEmail", email)
+      localStorage.setItem("userEmail", email);
       localStorage.setItem("access_token", response.data.access_token);
       navigate("/");
     } catch (err) {
