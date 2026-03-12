@@ -27,8 +27,13 @@ export const AuthProvider = ({ children }) => {
     fetchMe();
   }, []);
 
-  const login = async (email, password) => {
-    const res = await axios.post("/auth/login", { email, password });
+  const login = async (username, password) => {
+    const formData = new URLSearchParams();
+    formData.append("username", username);
+    formData.append("password", password);
+    const res = await axios.post("http://127.0.0.1:8000/auth/login", formData, {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
     localStorage.setItem("access_token", res.data.access_token);
     await fetchMe();
   };
