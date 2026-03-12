@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
+import API from "../api/api";
 
 export const AuthContext = createContext();
 
@@ -11,12 +12,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem("access_token");
       if (!token) return;
-      const res = await axios.get("http://127.0.0.1:8000/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await API.get("/auth/me");
       setUser(res.data);
-    } catch (e) {
-      console.error(e);
+    } catch {
       setUser(null);
     } finally {
       setLoading(false);
@@ -35,15 +33,19 @@ export const AuthProvider = ({ children }) => {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
     localStorage.setItem("access_token", res.data.access_token);
+    localStorage.setItem("refresh_token", res.data.refresh_token);
     await fetchMe();
   };
 
   const logout = async () => {
-    const token = localStorage.getItem("access_token");
-    await axios.post("/auth/logout", null, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const refreshToken = localStorage.getItem("refresh_token");
+    try {
+      await API.post("/auth/logout", { refresh_token: refreshToken });
+    } catch {
+      // игнорируем ошибки — всё равно чистим сессию
+    }
     localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     setUser(null);
   };
 
