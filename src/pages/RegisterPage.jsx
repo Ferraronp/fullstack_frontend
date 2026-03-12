@@ -4,7 +4,7 @@ import axios from "axios";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
@@ -22,14 +22,14 @@ export default function RegisterPage() {
 
     try {
       await axios.post("http://127.0.0.1:8000/auth/register", {
-        email,
+        username,
         password,
       });
       setSuccess("Регистрация успешна! Теперь войдите в аккаунт.");
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       if (err.response && err.response.status === 400) {
-        setError("Пользователь с таким email уже существует");
+        setError("Пользователь с таким именем уже существует");
       } else {
         setError("Ошибка при регистрации");
       }
@@ -49,11 +49,11 @@ export default function RegisterPage() {
         className="flex flex-col space-y-6 w-80 text-lg"
       >
         <label className="flex flex-col">
-          <span className="mb-1">Email:</span>
+          <span className="mb-1">Имя пользователя:</span>
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             className="bg-[#F0F0F0] px-3 py-2 rounded-md shadow-[5px_5px_4px_rgba(0,0,0,0.75)] outline-none"
             required
           />
