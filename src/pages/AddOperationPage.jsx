@@ -97,7 +97,6 @@ export default function AddOperationPage() {
             </span>
           </p>
         )}
-        </div>
 
         <div className="flex items-center justify-between">
           <label className="text-lg font-medium">Дата:</label>
