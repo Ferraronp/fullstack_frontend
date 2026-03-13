@@ -1,410 +1,283 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import API from "../api/api";
 
 export default function OperationsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  
-  const [filters, setFilters] = useState({
-    type: searchParams.get("type") || "",
-    category_id: "",
-    dateFrom: "",
-    dateTo: "",
-  });
 
-  const [operations, setOperations] = useState([]);
+  const getParam = (key, fallback = "") => searchParams.get(key) || fallback;
+
+  const [filters, setFilters] = useState({
+    start_date: getParam("start_date"),
+    end_date: getParam("end_date"),
+    category_id: getParam("category_id"),
+    comment: getParam("comment"),
+    min_amount: getParam("min_amount"),
+    max_amount: getParam("max_amount"),
+    sort_by: getParam("sort_by", "date"),
+    sort_order: getParam("sort_order", "desc"),
+  });
+  const [page, setPage] = useState(Number(getParam("page", "1")));
+
+  const [data, setData] = useState({ items: [], total: 0, pages: 1 });
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Загрузка операций и категорий
+  // Файлы
+  const [expandedOp, setExpandedOp] = useState(null);
+  const [uploadingFor, setUploadingFor] = useState(null);
+
+  const fetchOperations = useCallback(async (f, p) => {
+    setLoading(true);
+    setError("");
+    try {
+      const params = new URLSearchParams();
+      if (f.start_date) params.set("start_date", f.start_date);
+      if (f.end_date) params.set("end_date", f.end_date);
+      if (f.category_id) params.set("category_id", f.category_id);
+      if (f.comment) params.set("comment", f.comment);
+      if (f.min_amount) params.set("min_amount", f.min_amount);
+      if (f.max_amount) params.set("max_amount", f.max_amount);
+      params.set("sort_by", f.sort_by);
+      params.set("sort_order", f.sort_order);
+      params.set("page", p);
+      params.set("page_size", "20");
+
+      // Сохраняем фильтры в URL
+      setSearchParams(params);
+
+      const res = await API.get(`/operations/?${params}`);
+      setData(res.data);
+    } catch {
+      setError("Ошибка загрузки операций");
+    } finally {
+      setLoading(false);
+    }
+  }, [setSearchParams]);
+
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+    API.get("/categories/").then(r => setCategories(r.data)).catch(() => {});
+    fetchOperations(filters, page);
+  }, []);
 
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        // Параллельно загружаем операции и категории
-        const [operationsResponse, categoriesResponse] = await Promise.all([
-          fetch("http://127.0.0.1:8000/operations/", {
-            method: "GET",
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }),
-          fetch("http://127.0.0.1:8000/categories/", {
-            method: "GET",
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          })
-        ]);
-
-        if (!operationsResponse.ok || !categoriesResponse.ok) {
-          if (operationsResponse.status === 401 || categoriesResponse.status === 401) {
-            localStorage.removeItem("access_token");
-            navigate("/login");
-            return;
-          }
-          throw new Error("Ошибка при загрузке данных");
-        }
-
-        const operationsData = await operationsResponse.json();
-        const categoriesData = await categoriesResponse.json();
-
-        setOperations(operationsData);
-        setCategories(categoriesData);
-
-      } catch (err) {
-        setError(err.message);
-        console.error("Ошибка загрузки данных:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [navigate]);
-
-  // Функция для выхода
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    navigate("/login");
+  const applyFilters = () => {
+    setPage(1);
+    fetchOperations(filters, 1);
   };
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters({ ...filters, [name]: value });
+  const resetFilters = () => {
+    const empty = { start_date: "", end_date: "", category_id: "", comment: "", min_amount: "", max_amount: "", sort_by: "date", sort_order: "desc" };
+    setFilters(empty);
+    setPage(1);
+    fetchOperations(empty, 1);
   };
 
-  const applyFilters = async () => {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+  const handleSort = (field) => {
+    const newOrder = filters.sort_by === field && filters.sort_order === "asc" ? "desc" : "asc";
+    const newFilters = { ...filters, sort_by: field, sort_order: newOrder };
+    setFilters(newFilters);
+    fetchOperations(newFilters, page);
+  };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Удалить операцию?")) return;
     try {
-      setLoading(true);
-      
-      // Собираем параметры запроса
-      const queryParams = new URLSearchParams();
-      if (filters.type) queryParams.append("type", filters.type);
-      if (filters.category_id) queryParams.append("category_id", filters.category_id);
-      if (filters.dateFrom) queryParams.append("start_date", filters.dateFrom);
-      if (filters.dateTo) queryParams.append("end_date", filters.dateTo);
+      await API.delete(`/operations/${id}`);
+      fetchOperations(filters, page);
+    } catch {
+      setError("Ошибка удаления");
+    }
+  };
 
-      const response = await fetch(`http://127.0.0.1:8000/operations/?${queryParams}`, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem("access_token");
-          navigate("/login");
-          return;
-        }
-        throw new Error("Ошибка при применении фильтров");
-      }
-
-      const filteredData = await response.json();
-      setOperations(filteredData);
-
+  // --- файлы ---
+  const handleUpload = async (operationId, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingFor(operationId);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      await API.post(`/operations/${operationId}/files`, form);
+      fetchOperations(filters, page);
+      setExpandedOp(operationId);
     } catch (err) {
-      setError(err.message);
-      console.error("Ошибка фильтрации:", err);
+      setError(err.response?.data?.detail || "Ошибка загрузки файла");
     } finally {
-      setLoading(false);
+      setUploadingFor(null);
     }
   };
 
-  // Функция для удаления операции
-  const handleDeleteOperation = async (operationId) => {
-    if (!window.confirm("Вы уверены, что хотите удалить эту операцию?")) {
-      return;
-    }
-
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
+  const handleDownload = async (operationId, fileId, filename) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/operations/${operationId}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem("access_token");
-          navigate("/login");
-          return;
-        }
-        throw new Error("Ошибка при удалении операции");
-      }
-
-      // Удаляем операцию из состояния
-      setOperations(operations.filter(op => op.id !== operationId));
-
-    } catch (err) {
-      setError(err.message);
-      console.error("Ошибка удаления:", err);
+      const res = await API.get(`/operations/${operationId}/files/${fileId}/url`);
+      const a = document.createElement("a");
+      a.href = res.data.url;
+      a.download = filename;
+      a.target = "_blank";
+      a.click();
+    } catch {
+      setError("Ошибка получения ссылки");
     }
   };
 
-  // Функция для получения названия категории по ID
-  const getCategoryName = (categoryId) => {
-    const category = categories.find(cat => cat.id === categoryId);
-    return category ? category.name : "Без категории";
-  };
-
-  // Функция для получения цвета категории по ID
-  const getCategoryColor = (categoryId) => {
-    const category = categories.find(cat => cat.id === categoryId);
-    return category ? category.color : "#767676";
-  };
-
-  // Форматирование даты
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU');
-  };
-
-  // Сбрасываем фильтры
-  const resetFilters = async () => {
-    setFilters({
-      type: "",
-      category_id: "",
-      dateFrom: "",
-      dateTo: "",
-    });
-    
-    // Перезагружаем все операции
-    const token = localStorage.getItem("access_token");
-    if (!token) return;
-
+  const handleDeleteFile = async (operationId, fileId) => {
+    if (!window.confirm("Удалить файл?")) return;
     try {
-      setLoading(true);
-      const response = await fetch("http://127.0.0.1:8000/operations/", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const operationsData = await response.json();
-        setOperations(operationsData);
-      }
-    } catch (err) {
-      console.error("Ошибка при сбросе фильтров:", err);
-    } finally {
-      setLoading(false);
+      await API.delete(`/operations/${operationId}/files/${fileId}`);
+      fetchOperations(filters, page);
+    } catch {
+      setError("Ошибка удаления файла");
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#D9D9D9] flex justify-center items-center">
-        <p>Загрузка данных...</p>
-      </div>
-    );
-  }
+  const SortArrow = ({ field }) => {
+    if (filters.sort_by !== field) return <span className="opacity-30"> ↕</span>;
+    return <span>{filters.sort_order === "asc" ? " ↑" : " ↓"}</span>;
+  };
+
+  const formatDate = (d) => new Date(d).toLocaleDateString("ru-RU");
 
   return (
     <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center py-6">
-      {/* Верхняя панель */}
       <div className="flex justify-between items-center w-[90%] mb-6">
         <div className="text-lg font-medium">Личный финансовый учёт</div>
         <div className="flex gap-4">
-          <button
-            onClick={() => navigate("/")}
-            className="bg-[#767676] text-white px-5 py-2 rounded-md font-semibold shadow-[5px_5px_15px_rgba(0,0,0,0.75)] hover:opacity-90"
-          >
-            На главную
-          </button>
-          <button
-            onClick={() => navigate("/settings")}
-            className="bg-[#767676] text-white px-5 py-2 rounded-md font-semibold shadow-[5px_5px_15px_rgba(0,0,0,0.75)] hover:opacity-90"
-          >
-            Настройки ⚙️
-          </button>
-          <button
-            onClick={handleLogout}
-            className="bg-[#ff4444] text-white px-5 py-2 rounded-md font-semibold shadow-[5px_5px_15px_rgba(0,0,0,0.75)] hover:opacity-90"
-          >
-            Выйти
-          </button>
+          <button onClick={() => navigate("/")} className="bg-[#767676] text-white px-5 py-2 rounded-md font-semibold shadow-[5px_5px_15px_rgba(0,0,0,0.75)] hover:opacity-90">На главную</button>
         </div>
       </div>
 
-      {/* Сообщение об ошибке */}
       {error && (
         <div className="w-[90%] mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-          {error}
-          <button 
-            onClick={() => setError("")}
-            className="ml-4 text-red-800 font-bold"
-          >
-            ×
-          </button>
+          {error} <button onClick={() => setError("")} className="ml-4 font-bold">×</button>
         </div>
       )}
 
-      {/* Кнопки над таблицей */}
-      <div className="flex gap-4 mb-4">
-        <button
-          onClick={() => navigate("/add-operation")}
-          className="bg-[#4CAF50] text-white px-4 py-2 rounded-md font-semibold shadow-[5px_5px_15px_rgba(0,0,0,0.75)] hover:opacity-90"
-        >
-          Добавить операцию
-        </button>
-        <button
-          onClick={() => navigate("/report")}
-          className="bg-[#2196F3] text-white px-4 py-2 rounded-md font-semibold shadow-[5px_5px_15px_rgba(0,0,0,0.75)] hover:opacity-90"
-        >
-          Создать отчёт
-        </button>
-        <button
-          onClick={() => navigate("/add-category")}
-          className="bg-[#FF9800] text-white px-4 py-2 rounded-md font-semibold shadow-[5px_5px_15px_rgba(0,0,0,0.75)] hover:opacity-90"
-        >
-          Добавить категорию
-        </button>
-      </div>
-
       {/* Фильтры */}
-      <div className="flex flex-wrap justify-center gap-4 mb-6">
-        <select
-          name="type"
-          value={filters.type}
-          onChange={handleFilterChange}
-          className="bg-[#767676] text-white px-3 py-2 rounded-md shadow-[5px_5px_15px_rgba(0,0,0,0.75)]"
-        >
-          <option value="">Все типы</option>
-          <option value="income">Доходы</option>
-          <option value="expense">Расходы</option>
-        </select>
-
-        <select
-          name="category_id"
-          value={filters.category_id}
-          onChange={handleFilterChange}
-          className="bg-[#767676] text-white px-3 py-2 rounded-md shadow-[5px_5px_15px_rgba(0,0,0,0.75)]"
-        >
-          <option value="">Все категории</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="date"
-          name="dateFrom"
-          value={filters.dateFrom}
-          onChange={handleFilterChange}
-          className="bg-[#767676] text-white px-3 py-2 rounded-md shadow-[5px_5px_15px_rgba(0,0,0,0.75)]"
-          placeholder="С даты"
-        />
-
-        <input
-          type="date"
-          name="dateTo"
-          value={filters.dateTo}
-          onChange={handleFilterChange}
-          className="bg-[#767676] text-white px-3 py-2 rounded-md shadow-[5px_5px_15px_rgba(0,0,0,0.75)]"
-          placeholder="По дату"
-        />
-
-        <button
-          onClick={applyFilters}
-          className="bg-[#4CAF50] text-white px-4 py-2 rounded-md font-semibold shadow-[5px_5px_15px_rgba(0,0,0,0.75)] hover:opacity-90"
-        >
-          Применить
-        </button>
-
-        <button
-          onClick={resetFilters}
-          className="bg-[#767676] text-white px-4 py-2 rounded-md font-semibold shadow-[5px_5px_15px_rgba(0,0,0,0.75)] hover:opacity-90"
-        >
-          Сбросить
-        </button>
+      <div className="w-[90%] bg-[#B1B1B1] rounded-lg shadow p-4 mb-4">
+        <div className="flex flex-wrap gap-3 items-end">
+          <label className="flex flex-col text-sm">
+            С даты
+            <input type="date" value={filters.start_date} onChange={e => setFilters({...filters, start_date: e.target.value})}
+              className="bg-[#F0F0F0] px-2 py-1 rounded" />
+          </label>
+          <label className="flex flex-col text-sm">
+            По дату
+            <input type="date" value={filters.end_date} onChange={e => setFilters({...filters, end_date: e.target.value})}
+              className="bg-[#F0F0F0] px-2 py-1 rounded" />
+          </label>
+          <label className="flex flex-col text-sm">
+            Категория
+            <select value={filters.category_id} onChange={e => setFilters({...filters, category_id: e.target.value})}
+              className="bg-[#F0F0F0] px-2 py-1 rounded">
+              <option value="">Все</option>
+              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </label>
+          <label className="flex flex-col text-sm">
+            Комментарий
+            <input type="text" value={filters.comment} onChange={e => setFilters({...filters, comment: e.target.value})}
+              placeholder="Поиск..." className="bg-[#F0F0F0] px-2 py-1 rounded" />
+          </label>
+          <label className="flex flex-col text-sm">
+            Сумма от
+            <input type="number" value={filters.min_amount} onChange={e => setFilters({...filters, min_amount: e.target.value})}
+              className="bg-[#F0F0F0] px-2 py-1 rounded w-24" />
+          </label>
+          <label className="flex flex-col text-sm">
+            Сумма до
+            <input type="number" value={filters.max_amount} onChange={e => setFilters({...filters, max_amount: e.target.value})}
+              className="bg-[#F0F0F0] px-2 py-1 rounded w-24" />
+          </label>
+          <button onClick={applyFilters} className="bg-[#4CAF50] text-white px-4 py-2 rounded font-semibold hover:opacity-90">Применить</button>
+          <button onClick={resetFilters} className="bg-[#767676] text-white px-4 py-2 rounded font-semibold hover:opacity-90">Сбросить</button>
+          <button onClick={() => navigate("/add-operation")} className="bg-[#2196F3] text-white px-4 py-2 rounded font-semibold hover:opacity-90 ml-auto">+ Добавить</button>
+        </div>
       </div>
 
       {/* Таблица */}
-      <div className="w-[90%] bg-[#B1B1B1] rounded-lg shadow-[5px_5px_10px_rgba(0,0,0,0.75)] p-4">
-        {operations.length > 0 ? (
-          <table className="w-full text-center border-collapse">
-            <thead>
-              <tr className="border-b-2 border-black">
-                <th className="py-2">Дата</th>
-                <th>Категория</th>
-                <th>Сумма</th>
-                <th>Комментарий</th>
-                <th>Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {operations.map((operation) => (
-                <tr key={operation.id} className="border-t border-black">
-                  <td className="py-2">{formatDate(operation.date)}</td>
-                  <td style={{ color: getCategoryColor(operation.category_id) }}>
-                    {getCategoryName(operation.category_id)}
-                  </td>
-                  <td className={operation.amount < 0 ? "text-red-500 font-bold" : "text-green-500 font-bold"}>
-                    {operation.amount > 0 ? `+${operation.amount} ₽` : `${operation.amount} ₽`}
-                  </td>
-                  <td>{operation.comment || "-"}</td>
-                  <td>
-                    <div className="flex justify-center gap-2">
-                      <button
-                        onClick={() => navigate(`/edit-operation/${operation.id}`)}
-                        className="bg-[#2196F3] text-white px-3 py-1 rounded-md font-semibold shadow-[5px_5px_10px_rgba(0,0,0,0.75)] hover:opacity-90"
-                      >
-                        Ред.
-                      </button>
-                      <button
-                        onClick={() => handleDeleteOperation(operation.id)}
-                        className="bg-[#ff4444] text-white px-3 py-1 rounded-md font-semibold shadow-[5px_5px_10px_rgba(0,0,0,0.75)] hover:opacity-90"
-                      >
-                        Уд.
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="w-[90%] bg-[#B1B1B1] rounded-lg shadow p-4">
+        {loading ? (
+          <p className="text-center py-8">Загрузка...</p>
+        ) : data.items.length === 0 ? (
+          <p className="text-center py-8">Нет операций</p>
         ) : (
-          <div className="text-center py-8">
-            <p className="text-lg mb-4">Нет операций для отображения</p>
-            <button
-              onClick={() => navigate("/add-operation")}
-              className="bg-[#4CAF50] text-white px-4 py-2 rounded-md font-semibold shadow-[5px_5px_15px_rgba(0,0,0,0.75)] hover:opacity-90"
-            >
-              Добавить первую операцию
-            </button>
-          </div>
+          <>
+            <table className="w-full text-center border-collapse">
+              <thead>
+                <tr className="border-b-2 border-black">
+                  <th className="py-2 cursor-pointer" onClick={() => handleSort("date")}>Дата<SortArrow field="date" /></th>
+                  <th>Категория</th>
+                  <th className="cursor-pointer" onClick={() => handleSort("amount")}>Сумма<SortArrow field="amount" /></th>
+                  <th>Комментарий</th>
+                  <th>Файлы</th>
+                  <th>Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.items.map(op => (
+                  <>
+                    <tr key={op.id} className="border-t border-black">
+                      <td className="py-2">{formatDate(op.date)}</td>
+                      <td style={{ color: op.category?.color || "#767676" }}>{op.category?.name || "—"}</td>
+                      <td className={op.amount < 0 ? "text-red-600 font-bold" : "text-green-700 font-bold"}>
+                        {op.amount > 0 ? `+${op.amount}` : op.amount} ₽
+                      </td>
+                      <td>{op.comment || "—"}</td>
+                      <td>
+                        <button onClick={() => setExpandedOp(expandedOp === op.id ? null : op.id)}
+                          className="text-blue-700 underline text-sm">
+                          {op.files?.length || 0} файл(ов)
+                        </button>
+                      </td>
+                      <td>
+                        <div className="flex justify-center gap-2">
+                          <button onClick={() => navigate(`/edit-operation/${op.id}`)}
+                            className="bg-[#2196F3] text-white px-3 py-1 rounded text-sm hover:opacity-90">Ред.</button>
+                          <button onClick={() => handleDelete(op.id)}
+                            className="bg-[#ff4444] text-white px-3 py-1 rounded text-sm hover:opacity-90">Уд.</button>
+                        </div>
+                      </td>
+                    </tr>
+                    {expandedOp === op.id && (
+                      <tr key={`files-${op.id}`} className="bg-[#D0D0D0]">
+                        <td colSpan={6} className="px-4 py-2 text-left">
+                          <div className="flex flex-col gap-1">
+                            {op.files?.map(f => (
+                              <div key={f.id} className="flex items-center gap-3 text-sm">
+                                <span>{f.filename}</span>
+                                <button onClick={() => handleDownload(op.id, f.id, f.filename)}
+                                  className="text-blue-700 underline">Скачать</button>
+                                <button onClick={() => handleDeleteFile(op.id, f.id)}
+                                  className="text-red-600 underline">Удалить</button>
+                              </div>
+                            ))}
+                            <label className="mt-1 cursor-pointer text-sm text-blue-800 underline">
+                              {uploadingFor === op.id ? "Загрузка..." : "Прикрепить файл"}
+                              <input type="file" className="hidden" accept=".jpg,.jpeg,.png,.webp,.pdf,.txt"
+                                onChange={e => handleUpload(op.id, e)} disabled={uploadingFor === op.id} />
+                            </label>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Пагинация */}
+            <div className="flex justify-center items-center gap-3 mt-4">
+              <button onClick={() => { setPage(page - 1); fetchOperations(filters, page - 1); }}
+                disabled={page <= 1}
+                className="bg-[#767676] text-white px-3 py-1 rounded disabled:opacity-40">←</button>
+              <span>Стр. {page} из {data.pages} (всего {data.total})</span>
+              <button onClick={() => { setPage(page + 1); fetchOperations(filters, page + 1); }}
+                disabled={page >= data.pages}
+                className="bg-[#767676] text-white px-3 py-1 rounded disabled:opacity-40">→</button>
+            </div>
+          </>
         )}
       </div>
     </div>
