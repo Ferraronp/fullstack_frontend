@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../api/api";
 
 export default function AddCategoryPage() {
   const [name, setName] = useState("");
@@ -8,107 +9,32 @@ export default function AddCategoryPage() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Проверка токена при загрузке компонента
-  useEffect(() => {
-    const access_token = localStorage.getItem("access_token");
-    
-    if (!access_token) {
-      navigate("/login");
-      return;
-    }
-  }, [navigate]);
-
-  // Функция для отправки категории на бэкенд
   const handleSave = async () => {
     if (!name.trim()) {
       setError("Введите название категории");
       return;
     }
-
-    const access_token = localStorage.getItem("access_token");
-    if (!access_token) {
-      navigate("/login");
-      return;
-    }
-
     setLoading(true);
     setError("");
-
     try {
-      const response = await fetch("http://127.0.0.1:8000/categories", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${access_token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: name.trim(),
-          color: color,
-        }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem("access_token");
-          navigate("/login");
-          return;
-        }
-        throw new Error("Ошибка при сохранении категории");
-      }
-
-      const result = await response.json();
-      
-      // Успешно сохранено, перенаправляем на главную или страницу категорий
-      navigate("/"); // или navigate("/categories") если есть отдельная страница
-
+      await API.post("/categories/", { name: name.trim(), color });
+      navigate("/");
     } catch (err) {
-      setError(err.message);
-      console.error("Ошибка при сохранении категории:", err);
+      setError(err.response?.data?.detail || "Ошибка при сохранении категории");
     } finally {
       setLoading(false);
     }
   };
 
-  // Функция для выхода
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    navigate("/login");
-  };
-
   // Функция отмены
-  const handleCancel = () => {
-    navigate("/"); // или navigate(-1) для возврата на предыдущую страницу
-  };
+  const handleCancel = () => navigate(-1);
 
   return (
     <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center py-6">
-      {/* Верхняя панель */}
       <div className="flex justify-between items-center w-[90%] mb-6">
         <div className="text-lg font-medium">Личный финансовый учёт</div>
         <div className="flex gap-4">
-          {/* Кнопка перехода на главную */}
-          <button
-            onClick={() => navigate("/")}
-            className="bg-[#767676] text-white px-5 py-2 rounded-md font-semibold shadow-[5px_5px_15px_rgba(0,0,0,0.75)] hover:opacity-90"
-          >
-            На главную
-          </button>
-
-          {/* Кнопка перехода в настройки */}
-          <button
-            onClick={() => navigate("/settings")}
-            className="bg-[#767676] text-white px-5 py-2 rounded-md font-semibold shadow-[5px_5px_15px_rgba(0,0,0,0.75)] hover:opacity-90"
-          >
-            Настройки ⚙️
-          </button>
-
-          {/* Кнопка выхода */}
-          <button
-            onClick={handleLogout}
-            className="bg-[#ff4444] text-white px-5 py-2 rounded-md font-semibold shadow-[5px_5px_15px_rgba(0,0,0,0.75)] hover:opacity-90"
-          >
-            Выйти
-          </button>
+          <button onClick={() => navigate("/")} className="bg-[#767676] text-white px-5 py-2 rounded-md font-semibold shadow-[5px_5px_15px_rgba(0,0,0,0.75)] hover:opacity-90">На главную</button>
         </div>
       </div>
 

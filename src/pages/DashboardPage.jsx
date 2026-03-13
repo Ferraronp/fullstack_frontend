@@ -100,7 +100,7 @@ const Dashboard = () => {
         // Устанавливаем данные
         setBalance(balanceData.balance || 0);
         setCategories(categoriesData);
-        setTransactions(operationsData);
+        setTransactions(operationsData.items);
 
       } catch (err) {
         setError(err.message);
