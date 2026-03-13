@@ -192,7 +192,8 @@ export default function OperationsPage() {
           </label>
           <button onClick={applyFilters} className="bg-[#4CAF50] text-white px-4 py-2 rounded font-semibold hover:opacity-90">Применить</button>
           <button onClick={resetFilters} className="bg-[#767676] text-white px-4 py-2 rounded font-semibold hover:opacity-90">Сбросить</button>
-          <button onClick={() => navigate("/add-operation")} className="bg-[#2196F3] text-white px-4 py-2 rounded font-semibold hover:opacity-90 ml-auto">+ Добавить</button>
+          <button onClick={() => navigate("/add-category")} className="bg-[#FF9800] text-white px-4 py-2 rounded font-semibold hover:opacity-90">+ Категория</button>
+          <button onClick={() => navigate("/add-operation")} className="bg-[#2196F3] text-white px-4 py-2 rounded font-semibold hover:opacity-90">+ Операция</button>
         </div>
       </div>
 
