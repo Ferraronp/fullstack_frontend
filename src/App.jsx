@@ -11,7 +11,7 @@ const OperationsPage  = lazy(() => import("./pages/OperationsPage"));
 const AddOperationPage= lazy(() => import("./pages/AddOperationPage"));
 const AddCategoryPage = lazy(() => import("./pages/AddCategoryPage"));
 const SettingsPage    = lazy(() => import("./pages/SettingsPage"));
-const ReportsPage     = lazy(() => import("./pages/ReportsPage"));
+const AnalysisPage    = lazy(() => import("./pages/AnalysisPage"));
 
 function PageLoader() {
   return (
@@ -44,6 +44,7 @@ export default function App() {
               <Route path="/add-category" element={<ProtectedRoute><AddCategoryPage /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute requiredRole="admin"><SettingsPage /></ProtectedRoute>} />
               <Route path="/report" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
+              <Route path="/analysis" element={<ProtectedRoute><AnalysisPage /></ProtectedRoute>} />
             </Routes>
           </Suspense>
         </BrowserRouter>

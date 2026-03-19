@@ -404,6 +404,12 @@ const Dashboard = () => {
         >
           Отчёты
         </button>
+        <button
+          onClick={() => navigate("/analysis")}
+          style={getButtonStyle("green")}
+        >
+          AI-анализ 🤖
+        </button>
       </div>
     </div>
   );
