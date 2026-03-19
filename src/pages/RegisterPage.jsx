@@ -1,3 +1,4 @@
+import SEOMeta from "../components/SEOMeta";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -37,7 +38,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center py-6">
+    <SEOMeta title="Регистрация" description="Создайте аккаунт для ведения личного финансового учёта" path="/register" noindex={false} />
+      <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center py-6">
       <div className="flex justify-between items-center w-[90%] mb-6">
         <div className="text-lg font-medium">Личный финансовый учёт</div>
       </div>

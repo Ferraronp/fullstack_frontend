@@ -1,3 +1,4 @@
+import SEOMeta from "../components/SEOMeta";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
@@ -26,7 +27,8 @@ export default function ReportsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center py-6">
+    <SEOMeta title="Отчёты" description="Финансовые отчёты и аналитика" path="/report" noindex={true} />
+      <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center py-6">
       {/* Верхняя панель */}
       <div className="flex justify-between items-center w-[90%] mb-6">
         <div className="text-lg font-medium">Личный финансовый учёт</div>
