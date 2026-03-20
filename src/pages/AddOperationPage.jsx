@@ -1,3 +1,4 @@
+import SEOMeta from "../components/SEOMeta";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/api";
@@ -51,7 +52,8 @@ export default function AddOperationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center py-6">
+    <SEOMeta title="Добавить операцию" description="Добавление новой финансовой операции" path="/add-operation" noindex={true} />
+      <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center py-6">
       <div className="flex justify-between items-center w-[90%] mb-6">
         <div className="text-lg font-medium">Личный финансовый учёт</div>
         <button onClick={() => navigate("/")} className="bg-[#767676] text-white px-5 py-2 rounded-md font-semibold shadow-[5px_5px_15px_rgba(0,0,0,0.75)] hover:opacity-90">На главную</button>

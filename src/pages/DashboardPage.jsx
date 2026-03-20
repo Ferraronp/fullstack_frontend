@@ -1,3 +1,4 @@
+import SEOMeta from "../components/SEOMeta";
 import React, { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { useNavigate } from "react-router-dom";
@@ -135,6 +136,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
+      <SEOMeta title="Главная" description="Обзор ваших финансов" path="/" noindex={true} />
       <div
         className="min-h-screen p-6 flex justify-center items-center"
         style={{
@@ -401,6 +403,12 @@ const Dashboard = () => {
           style={getButtonStyle("blue")}
         >
           Отчёты
+        </button>
+        <button
+          onClick={() => navigate("/analysis")}
+          style={getButtonStyle("green")}
+        >
+          AI-анализ 🤖
         </button>
       </div>
     </div>

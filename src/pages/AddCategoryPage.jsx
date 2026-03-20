@@ -1,3 +1,4 @@
+import SEOMeta from "../components/SEOMeta";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/api";
@@ -30,7 +31,8 @@ export default function AddCategoryPage() {
   const handleCancel = () => navigate(-1);
 
   return (
-    <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center py-6">
+    <SEOMeta title="Добавить категорию" description="Создание категории для операций" path="/add-category" noindex={true} />
+      <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center py-6">
       <div className="flex justify-between items-center w-[90%] mb-6">
         <div className="text-lg font-medium">Личный финансовый учёт</div>
         <div className="flex gap-4">
