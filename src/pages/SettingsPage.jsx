@@ -12,7 +12,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <SEOMeta title="Настройки" description="Настройки приложения" path="/settings" noindex={true} />
+    <>
+        <SEOMeta title="Настройки" description="Настройки приложения" path="/settings" noindex={true} />
       <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center py-6">
       {/* Верхняя панель */}
       <div className="flex justify-between items-center w-[90%] mb-6">
@@ -54,5 +55,6 @@ export default function SettingsPage() {
         </button>
       </div>
     </div>
+  </>
   );
 }

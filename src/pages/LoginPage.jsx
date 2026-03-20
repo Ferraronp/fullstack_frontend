@@ -28,7 +28,8 @@ export default function LoginPage() {
   };
 
   return (
-    <SEOMeta title="Вход" description="Войдите в личный кабинет финансового учёта" path="/login" noindex={false} />
+    <>
+        <SEOMeta title="Вход" description="Войдите в личный кабинет финансового учёта" path="/login" noindex={false} />
       <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center py-6">
       <div className="flex justify-between items-center w-[90%] mb-6">
         <div className="text-lg font-medium">Личный финансовый учёт</div>
@@ -78,5 +79,6 @@ export default function LoginPage() {
         </div>
       </form>
     </div>
+  </>
   );
 }

@@ -27,7 +27,8 @@ export default function ReportsPage() {
   });
 
   return (
-    <SEOMeta title="Отчёты" description="Финансовые отчёты и аналитика" path="/report" noindex={true} />
+    <>
+        <SEOMeta title="Отчёты" description="Финансовые отчёты и аналитика" path="/report" noindex={true} />
       <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center py-6">
       {/* Верхняя панель */}
       <div className="flex justify-between items-center w-[90%] mb-6">
@@ -125,5 +126,6 @@ export default function ReportsPage() {
         </button>
       </div>
     </div>
+  </>
   );
 }
