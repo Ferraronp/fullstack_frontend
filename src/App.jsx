@@ -11,6 +11,7 @@ const OperationsPage  = lazy(() => import("./pages/OperationsPage"));
 const AddOperationPage= lazy(() => import("./pages/AddOperationPage"));
 const AddCategoryPage = lazy(() => import("./pages/AddCategoryPage"));
 const SettingsPage    = lazy(() => import("./pages/SettingsPage"));
+const ReportsPage     = lazy(() => import("./pages/ReportsPage"));
 const AnalysisPage    = lazy(() => import("./pages/AnalysisPage"));
 
 function PageLoader() {
