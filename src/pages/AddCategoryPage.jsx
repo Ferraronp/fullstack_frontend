@@ -31,7 +31,8 @@ export default function AddCategoryPage() {
   const handleCancel = () => navigate(-1);
 
   return (
-    <SEOMeta title="Добавить категорию" description="Создание категории для операций" path="/add-category" noindex={true} />
+    <>
+        <SEOMeta title="Добавить категорию" description="Создание категории для операций" path="/add-category" noindex={true} />
       <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center py-6">
       <div className="flex justify-between items-center w-[90%] mb-6">
         <div className="text-lg font-medium">Личный финансовый учёт</div>
@@ -125,5 +126,6 @@ export default function AddCategoryPage() {
         </div>
       </div>
     </div>
+  </>
   );
 }

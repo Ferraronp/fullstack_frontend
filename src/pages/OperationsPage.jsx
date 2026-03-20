@@ -141,7 +141,8 @@ export default function OperationsPage() {
   const formatDate = (d) => new Date(d).toLocaleDateString("ru-RU");
 
   return (
-    <SEOMeta title="Операции" description="Управление финансовыми операциями" path="/operations" noindex={true} />
+    <>
+        <SEOMeta title="Операции" description="Управление финансовыми операциями" path="/operations" noindex={true} />
       <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center py-6">
       <div className="flex justify-between items-center w-[90%] mb-6">
         <div className="text-lg font-medium">Личный финансовый учёт</div>
@@ -284,5 +285,6 @@ export default function OperationsPage() {
         )}
       </div>
     </div>
+  </>
   );
 }
