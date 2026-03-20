@@ -136,16 +136,18 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <SEOMeta title="Главная" description="Обзор ваших финансов" path="/" noindex={true} />
-      <div
-        className="min-h-screen p-6 flex justify-center items-center"
-        style={{
-          backgroundColor: "#D9D9D9",
-          fontFamily: "sans-serif",
-        }}
-      >
-        <p>Загрузка данных...</p>
-      </div>
+      <>
+        <SEOMeta title="Главная" description="Обзор ваших финансов" path="/" noindex={true} />
+        <div
+          className="min-h-screen p-6 flex justify-center items-center"
+          style={{
+            backgroundColor: "#D9D9D9",
+            fontFamily: "sans-serif",
+          }}
+        >
+          <p>Загрузка данных...</p>
+        </div>
+      </>
     );
   }
 
