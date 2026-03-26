@@ -61,21 +61,21 @@ const Dashboard = () => {
         
         // Параллельно запрашиваем операции, баланс и категории
         const [operationsResponse, balanceResponse, categoriesResponse] = await Promise.all([
-          fetch("http://backend:8000/operations/", {
+          fetch("/api/operations/", {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${access_token}`,
               "Content-Type": "application/json",
             },
           }),
-          fetch("http://backend:8000/operations/balance/total", {
+          fetch("/api/operations/balance/total", {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${access_token}`,
               "Content-Type": "application/json",
             },
           }),
-          fetch("http://backend:8000/categories/", {
+          fetch("/api/categories/", {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${access_token}`,

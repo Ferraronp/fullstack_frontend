@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://backend:8000",
+  baseURL: "/api",
 });
 
 // Request interceptor — подставляем access token
@@ -57,7 +57,7 @@ API.interceptors.response.use(
       }
 
       try {
-        const res = await axios.post("http://backend:8000/auth/refresh", {
+        const res = await axios.post("/api/auth/refresh", {
           refresh_token: refreshToken,
         });
         const { access_token, refresh_token } = res.data;
