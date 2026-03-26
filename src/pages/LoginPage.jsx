@@ -16,7 +16,7 @@ export default function LoginPage() {
       formData.append("username", username);
       formData.append("password", password);
 
-      const response = await axios.post("http://127.0.0.1:8000/auth/login", formData, {
+      const response = await axios.post("http://backend:8000/auth/login", formData, {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
       });
       localStorage.setItem("access_token", response.data.access_token);

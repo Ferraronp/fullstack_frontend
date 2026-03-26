@@ -22,7 +22,7 @@ export default function RegisterPage() {
     }
 
     try {
-      await axios.post("http://127.0.0.1:8000/auth/register", {
+      await axios.post("http://backend:8000/auth/register", {
         username,
         password,
       });
