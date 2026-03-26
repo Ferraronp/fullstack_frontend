@@ -143,10 +143,12 @@ test('удаление операции убирает её из списка', 
   await uiLogin(page, username, password)
   await page.goto('/operations')
 
-  // проверяем что операция есть — по точному тексту ячейки суммы
   await expect(page.getByRole('cell', { name: '+999 ₽' })).toBeVisible()
 
-  // разворачиваем строку и удаляем
+  // принимаем window.confirm автоматически
+  page.on('dialog', dialog => dialog.accept())
+
+  // разворачиваем строку и нажимаем Уд.
   await page.locator('table tbody tr').first().getByRole('button').first().click()
   await page.getByRole('button', { name: 'Уд.' }).first().click()
 
