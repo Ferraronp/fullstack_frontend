@@ -34,4 +34,3 @@ README*
 Dockerfile
 docker-compose*.yml
 .dockerignore
-nginx.spa.conf
