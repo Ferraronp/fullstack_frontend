@@ -1,0 +1,37 @@
+# Зависимости (устанавливаются заново в образе)
+node_modules/
+
+# Результат сборки (собирается в образе)
+dist/
+build/
+
+# Тесты
+coverage/
+*.lcov
+.nyc_output/
+
+# Git
+.git/
+.gitignore
+
+# Конфиги IDE
+.idea/
+.vscode/
+
+# CI/CD
+.github/
+
+# Переменные окружения
+.env
+.env.*
+!.env.example
+
+# Документация
+*.md
+README*
+
+# Docker-файлы
+Dockerfile
+docker-compose*.yml
+.dockerignore
+nginx.spa.conf
