@@ -42,6 +42,11 @@ export async function uiLogin(page, username, password = 'E2ePass1!') {
   await expect(page).not.toHaveURL(/login/)
 }
 
+/** Заполняет поле пароля на странице регистрации (два поля — нужен точный label) */
+async function fillRegisterPassword(page, label, value) {
+  await page.getByLabel(label, { exact: true }).fill(value)
+}
+
 /** Создаёт категорию через API */
 export async function createCategory(request, token, name) {
   const res = await request.post(`${API}/categories/`, {
